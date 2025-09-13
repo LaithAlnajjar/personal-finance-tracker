@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { PrismaClient } from './generated/prisma';
 import authRouter from './routes/authRoutes';
+import authMiddleware from './middleware/authMiddleware';
 
 dotenv.config();
 
@@ -24,6 +25,10 @@ app.get('/test-db', async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ ok: false, error: String(error) });
   }
+});
+
+app.get('/me', authMiddleware.authenticateUser, async (req: Request, res: Response) => {
+  res.send('AUTHENTICATED');
 });
 
 const PORT = process.env.PORT;
