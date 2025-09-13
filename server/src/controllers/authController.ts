@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '../generated/prisma';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -35,6 +38,35 @@ export default class AuthController {
       return res.status(500).json({
         success: false,
         message: 'Something went wrong',
+      });
+    }
+  };
+
+  static login = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, password } = req.body;
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      }
+
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+        return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      }
+
+      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, {
+        expiresIn: '1h',
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: { user, token },
+      });
+    } catch (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Login failed',
       });
     }
   };
