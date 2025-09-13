@@ -1,10 +1,17 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { PrismaClient } from './generated/prisma';
+import authRouter from './routes/authRoutes';
 
 dotenv.config();
+
 const app = express();
 const prisma = new PrismaClient();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api', authRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello Mate');
