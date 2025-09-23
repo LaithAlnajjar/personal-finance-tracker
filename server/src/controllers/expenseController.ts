@@ -49,11 +49,18 @@ export default class expenseController {
         });
       }
       const userId = req.user.id;
-      const expenses = await prisma.expense.findMany({
-        where: {
-          userId,
-        },
-      });
+      const where: any = { userId };
+      if (req.query.category) {
+        where.category = req.query.category;
+      }
+
+      if (req.query.from || req.query.to) {
+        where.date = {};
+        if (req.query.from) where.date.gte = req.query.from;
+        if (req.query.to) where.date.lte = req.query.to;
+      }
+
+      const expenses = await prisma.expense.findMany({ where, orderBy: { date: 'desc' } });
       return res.status(200).json({
         success: true,
         data: { expenses },
