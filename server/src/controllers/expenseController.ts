@@ -7,7 +7,13 @@ export default class expenseController {
   static async createExpense(req: Request, res: Response) {
     try {
       const { merchant, category, notes } = req.body;
-      const userId = parseInt(req.body.userId);
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized: User not found',
+        });
+      }
+      const userId = req.user.id;
       const amount = parseFloat(req.body.amount);
       const date = new Date(req.body.dateAdded);
       const expense = await prisma.expense.create({
@@ -36,7 +42,13 @@ export default class expenseController {
 
   static async getAllExpensesById(req: Request, res: Response) {
     try {
-      const userId = parseInt(req.body.userId);
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized: User not found',
+        });
+      }
+      const userId = req.user.id;
       const expenses = await prisma.expense.findMany({
         where: {
           userId,

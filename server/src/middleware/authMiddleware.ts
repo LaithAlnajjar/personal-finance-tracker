@@ -3,24 +3,27 @@ import jwt from 'jsonwebtoken';
 
 declare module 'express' {
   export interface Request {
-    userId?: string;
+    user?: { id: number };
   }
 }
 
 export default class AuthMiddleware {
   static authenticateUser = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.header('Authorization');
+    const header = req.header('Authorization');
 
-    if (!token) {
+    if (!header) {
       return res.status(401).json({
         success: false,
-        message: 'Acess denied',
+        message: 'Authorization header missing',
       });
     }
 
+    const parts = header.split(' ');
+    const token = parts[1];
+
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload;
-      req.userId = decoded.userId;
+      req.user = { id: decoded.userId };
       next();
     } catch (error) {
       return res.status(401).json({
