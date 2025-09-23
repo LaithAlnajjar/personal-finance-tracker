@@ -73,4 +73,33 @@ export default class expenseController {
       });
     }
   }
+
+  static async editExpense(req: Request, res: Response) {
+    try {
+      const id = parseInt(req.params.expenseId);
+      const { merchant, category, notes } = req.body;
+      const amount = parseFloat(req.body.amount);
+      const expense = await prisma.expense.update({
+        where: {
+          id,
+        },
+        data: {
+          amount,
+          merchant,
+          category,
+          notes,
+        },
+      });
+      return res.status(200).json({
+        success: true,
+        data: { expense },
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: 'Something went wrong',
+      });
+    }
+  }
 }
