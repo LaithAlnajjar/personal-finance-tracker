@@ -4,4 +4,6 @@ import expenseController from '../controllers/expenseController';
 
 expenseRouter.post('/', expenseController.createExpense);
 
+expenseRouter.get('/', expenseController.getAllExpensesById);
+
 export default expenseRouter;
