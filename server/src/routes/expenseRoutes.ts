@@ -6,4 +6,6 @@ expenseRouter.post('/', expenseController.createExpense);
 
 expenseRouter.get('/', expenseController.getAllExpensesById);
 
+expenseRouter.delete('/:expenseId', expenseController.deleteExpense);
+
 export default expenseRouter;
