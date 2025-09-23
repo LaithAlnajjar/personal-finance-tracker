@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import { PrismaClient } from './generated/prisma';
 import authRouter from './routes/authRoutes';
+import expenseRouter from './routes/expenseRoutes';
 import authMiddleware from './middleware/authMiddleware';
 
 dotenv.config();
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', authRouter);
+app.use('/api/expense', expenseRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Hello Mate');
