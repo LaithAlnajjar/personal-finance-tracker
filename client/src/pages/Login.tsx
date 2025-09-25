@@ -55,7 +55,7 @@ export default function Login() {
             <label className="flex flex-col text-gray-500 text-lg font-medium gap-1">
               Password
               <input
-                className="text-lg p-4 h-10 w-full border border-gray-300 rounded-3xl focus:border-primary"
+                className="text-base p-4 h-10 w-full border border-gray-300 rounded-3xl focus:border-primary"
                 placeholder="XXXXXXXX"
                 type="password"
                 name="password"

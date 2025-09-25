@@ -1,11 +1,17 @@
 import React, { useState, type SyntheticEvent } from "react";
+import { useNavigate, Link } from "react-router";
 import { api } from "../lib/api";
+import logo from "../assets/expensia-high-resolution-logo-transparent.png";
+import loginImage from "../assets/login.jpg";
 
 export default function Register() {
+  const navigate = useNavigate();
+
   const [input, setInput] = useState({
+    name: "",
     email: "",
-    username: "",
     password: "",
+    confirmPassword: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,32 +22,111 @@ export default function Register() {
     e.preventDefault();
     const reponse = await api.post("/api/register", input);
     console.log(reponse);
+    navigate("/login");
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        email
-        <input type="email" name="email" id="email" onChange={handleChange} />
-      </label>
-      <label htmlFor="username">
-        <input
-          type="text"
-          name="username"
-          id="username"
-          onChange={handleChange}
+    <div className="h-screen flex justify-center">
+      <div className="p-8 h-screen w-[50vw] flex flex-col justify-center items-center gap-5">
+        <div className="flex self-ce">
+          <img className="w-85" src={logo} alt="logo" />
+        </div>
+
+        <div className=" max-w-md">
+          <div className="flex flex-col pt-8">
+            <div className="font-medium text-xl">Create an account</div>
+            <div className="text-gray-500">
+              Join and start tracking your expenses
+            </div>
+          </div>
+
+          <form
+            onSubmit={handleSubmit}
+            className="w-100 flex flex-col pt-8 gap-6"
+          >
+            <label className="flex flex-col text-gray-500 font-medium text-lg gap-1">
+              Username
+              <input
+                className="text-base p-4 h-10 w-full border border-gray-300 rounded-3xl focus:border-primary"
+                placeholder="Example123"
+                type="text"
+                name="name"
+                id="name"
+                value={input.name}
+                onChange={handleChange}
+                required
+              />
+            </label>
+
+            <label className="flex flex-col text-gray-500 font-medium text-lg gap-1">
+              Email
+              <input
+                className="text-base p-4 h-10 w-full border border-gray-300 rounded-3xl focus:border-primary"
+                placeholder="example@gmail.com"
+                type="email"
+                name="email"
+                id="email"
+                value={input.email}
+                onChange={handleChange}
+                required
+              />
+            </label>
+
+            <label className="flex flex-col text-gray-500 font-medium text-lg gap-1">
+              Password
+              <input
+                className="text-base p-4 h-10 w-full border border-gray-300 rounded-3xl focus:border-primary"
+                placeholder="XXXXXXXX"
+                type="password"
+                name="password"
+                id="password"
+                value={input.password}
+                onChange={handleChange}
+                required
+              />
+            </label>
+
+            <label className="flex flex-col text-gray-500 font-medium text-lg gap-1">
+              Confirm password
+              <input
+                className="text-base p-4 h-10 w-full border border-gray-300 rounded-3xl focus:border-primary"
+                placeholder="Repeat your password"
+                type="password"
+                name="confirmPassword"
+                id="confirmPassword"
+                value={input.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+            </label>
+
+            <button
+              className="bg-primary text-white h-11 rounded-3xl hover:bg-teal-600 hover:cursor-pointer disabled:opacity-60"
+              type="submit"
+            >
+              Create account
+            </button>
+
+            <div className="text-center">
+              Already have an account?{" "}
+              <Link
+                to="/"
+                className="text-primary font-bold hover:text-teal-600 hover:cursor-pointer"
+              >
+                Login
+              </Link>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="h-screen w-[50vw]">
+        <img
+          src={loginImage}
+          alt="register"
+          className="h-full w-full object-cover"
         />
-      </label>
-      <label>
-        password
-        <input
-          type="password"
-          name="password"
-          id="password"
-          onChange={handleChange}
-        />
-      </label>
-      <button type="submit"></button>
-    </form>
+      </div>
+    </div>
   );
 }
