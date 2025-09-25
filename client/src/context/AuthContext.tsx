@@ -52,8 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return true;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      const message =
-        err.response.data.message || err.message || "Login failed";
+      const message = err.response.data.message || "Login failed";
       setError(message);
       return false;
     } finally {
