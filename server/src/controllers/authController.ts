@@ -26,13 +26,21 @@ export default class AuthController {
       const user = await prisma.user.create({
         data: {
           email: req.body.email,
-          name: req.body.name,
+          name: req.body.username,
           password: hash,
         },
       });
+
+      const safeUser = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      };
+
       return res.status(201).json({
         success: true,
-        data: { user },
+        data: { safeUser },
       });
     } catch (err) {
       return res.status(500).json({
@@ -59,9 +67,16 @@ export default class AuthController {
         expiresIn: '1h',
       });
 
+      const safeUser = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      };
+
       return res.status(200).json({
         success: true,
-        data: { user, token },
+        data: { safeUser, token },
       });
     } catch (err) {
       return res.status(500).json({

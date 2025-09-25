@@ -9,9 +9,6 @@ export type AuthState = {
   token: string | null;
   loading: boolean;
   error: string | null;
-  login: (parameters: {
-    username: string;
-    password: string;
-  }) => Promise<boolean>;
+  login: (parameters: { email: string; password: string }) => Promise<boolean>;
   logout: () => void;
 };
