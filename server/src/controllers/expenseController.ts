@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export default class expenseController {
   static async createExpense(req: Request, res: Response) {
     try {
-      const { merchant, category, notes } = req.body;
+      const { title, merchant, category, notes } = req.body;
       if (!req.user || !req.user.id) {
         return res.status(401).json({
           success: false,
@@ -15,9 +15,11 @@ export default class expenseController {
       }
       const userId = req.user.id;
       const amount = parseFloat(req.body.amount);
-      const date = new Date(req.body.dateAdded);
+      const date = new Date(req.body.date);
+      console.log(req.body);
       const expense = await prisma.expense.create({
         data: {
+          title,
           amount,
           date,
           merchant,
@@ -33,6 +35,7 @@ export default class expenseController {
         data: { expense },
       });
     } catch (err) {
+      console.error(err);
       return res.status(500).json({
         success: false,
         message: 'Something went wrong',

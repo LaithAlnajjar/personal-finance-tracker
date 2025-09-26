@@ -64,7 +64,7 @@ export default class AuthController {
       }
 
       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, {
-        expiresIn: '1h',
+        expiresIn: '7d',
       });
 
       const safeUser = {
@@ -76,7 +76,7 @@ export default class AuthController {
 
       return res.status(200).json({
         success: true,
-        data: { safeUser, token },
+        data: { user: safeUser, token },
       });
     } catch (err) {
       return res.status(500).json({

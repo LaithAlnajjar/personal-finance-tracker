@@ -1,10 +1,12 @@
 import React, { useState, type SyntheticEvent } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import loginImage from "../assets/login.jpg";
 import logo from "../assets/expensia-high-resolution-logo-transparent.png";
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [input, setInput] = useState({
     email: "",
     password: "",
@@ -20,6 +22,7 @@ export default function Login() {
     const response = await auth?.login(input);
     if (response) {
       console.log(response);
+      navigate("/dashboard");
     }
   };
 

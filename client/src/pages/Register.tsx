@@ -22,7 +22,7 @@ export default function Register() {
     e.preventDefault();
     const reponse = await api.post("/api/register", input);
     console.log(reponse);
-    navigate("/login");
+    navigate("/");
   };
 
   return (
