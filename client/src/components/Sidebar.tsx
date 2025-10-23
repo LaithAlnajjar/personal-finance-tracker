@@ -13,7 +13,10 @@ export default function Sidebar() {
           {" "}
           <Link to="">Expense List</Link>
         </li>
-        <li className="border p-1"> import CSV</li>
+        <li className="border p-1">
+          {" "}
+          <Link to="import">Import CSV</Link>
+        </li>
       </ul>
     </div>
   );

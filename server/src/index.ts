@@ -2,7 +2,12 @@ import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import authRouter from './routes/authRoutes';
 import expenseRouter from './routes/expenseRoutes';
+import importRouter from './routes/importRoutes';
 import cors from 'cors';
+import fs from 'node:fs';
+import { parse } from 'csv-parse';
+import path from 'path';
+
 dotenv.config();
 
 const app = express();
@@ -13,8 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', authRouter);
 app.use('/api/expense', expenseRouter);
+app.use('/api/import', importRouter);
 
 const PORT = process.env.PORT;
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running at http://localhost:${PORT}...`);
 });

@@ -4,7 +4,6 @@ const baseURL = "http://localhost:3000/";
 
 export const api = axios.create({
   baseURL,
-  headers: { "Content-Type": "application/json" },
 });
 
 export function setAuthToken(token: string | null) {

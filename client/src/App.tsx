@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ExpensesList from "./pages/ExpensesList";
 import NewExpense from "./pages/NewExpense";
+import ImportCSV from "./pages/ImportCSV";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<ExpensesList />} />
           <Route path="new" element={<NewExpense />} />
+          <Route path="import" element={<ImportCSV />} />
         </Route>
       </Routes>
     </Router>
