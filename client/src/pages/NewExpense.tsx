@@ -22,40 +22,96 @@ export default function NewExpense() {
   };
 
   return (
-    <form className="w-full flex flex-col p-10 gap-5" onSubmit={handleSubmit}>
-      <label className="border" htmlFor="title">
-        {" "}
-        Title
-        <input type="text" name="title" onChange={handleChange} />
-      </label>
-      <label className="border" htmlFor="amount">
-        {" "}
-        Amount
-        <input type="number" name="amount" onChange={handleChange} />
-      </label>
-      <label className="border" htmlFor="merchant">
-        {" "}
-        Merchant
-        <input type="text" name="merchant" onChange={handleChange} />
-      </label>
-      <label className="border" htmlFor="category">
-        {" "}
-        Category
-        <input type="text" name="category" onChange={handleChange} />
-      </label>
-      <label className="border" htmlFor="date">
-        {" "}
-        Date
-        <input type="date" name="date" onChange={handleChange} />
-      </label>
-      <label className="border" htmlFor="notes">
-        {" "}
-        Notes
-        <input type="text" name="notes" onChange={handleChange} />
-      </label>
-      <button className="border" type="submit">
-        Submit
-      </button>
-    </form>
+    <div className="grid place-content-center w-full bg-secondary ">
+      <form
+        className="w-200 flex flex-col p-10 gap-5 justify-center bg-white rounded-3xl shadow-md"
+        onSubmit={handleSubmit}
+      >
+        <label
+          className="flex flex-col text-gray-500 font-medium text-lg gap-1"
+          htmlFor="title"
+        >
+          {" "}
+          Title
+          <input
+            className="text-base p-4 h-10 w-full lg border border-gray-300 rounded-3xl focus:border-primary"
+            type="text"
+            name="title"
+            onChange={handleChange}
+          />
+        </label>
+        <label
+          className="flex flex-col text-gray-500 font-medium text-lg gap-1"
+          htmlFor="amount"
+        >
+          {" "}
+          Amount *
+          <input
+            className="text-base p-4 h-10 w-full lg border border-gray-300 rounded-3xl focus:border-primary"
+            type="number"
+            name="amount"
+            onChange={handleChange}
+          />
+        </label>
+        <label
+          className="flex flex-col text-gray-500 font-medium text-lg gap-1"
+          htmlFor="merchant"
+        >
+          {" "}
+          Merchant
+          <input
+            className="text-base p-4 h-10 w-full lg border border-gray-300 rounded-3xl focus:border-primary"
+            type="text"
+            name="merchant"
+            onChange={handleChange}
+          />
+        </label>
+        <label
+          className="flex flex-col text-gray-500 font-medium text-lg gap-1"
+          htmlFor="category"
+        >
+          {" "}
+          Category
+          <input
+            className="text-base p-4 h-10 w-full lg border border-gray-300 rounded-3xl focus:border-primary"
+            type="text"
+            name="category"
+            onChange={handleChange}
+          />
+        </label>
+        <label
+          className="flex flex-col text-gray-500 font-medium text-lg gap-1"
+          htmlFor="date"
+        >
+          {" "}
+          Date
+          <input
+            className="text-base p-4 h-10 w-full lg border border-gray-300 rounded-3xl focus:border-primary"
+            type="date"
+            name="date"
+            onChange={handleChange}
+          />
+        </label>
+        <label
+          className="flex flex-col text-gray-500 font-medium text-lg gap-1"
+          htmlFor="notes"
+        >
+          {" "}
+          Notes
+          <input
+            className="text-base p-4 h-10 w-full lg border border-gray-300 rounded-3xl focus:border-primary"
+            type="text"
+            name="notes"
+            onChange={handleChange}
+          />
+        </label>
+        <button
+          className="bg-primary text-white font-medium h-11 rounded-3xl hover:bg-teal-600 hover:cursor-pointer"
+          type="submit"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
   );
 }

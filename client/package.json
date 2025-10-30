@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/cli": "^4.1.13",
     "@types/react-router-dom": "^5.3.3",
+    "lucide-react": "^0.548.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router": "^7.9.2"
