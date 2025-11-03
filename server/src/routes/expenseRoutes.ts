@@ -15,4 +15,28 @@ expenseRouter.delete(
 
 expenseRouter.put('/:expenseId', AuthMiddleware.authenticateUser, expenseController.editExpense);
 
+expenseRouter.get(
+  '/getTotalExpenses',
+  AuthMiddleware.authenticateUser,
+  expenseController.getTotalExpenses
+);
+
+expenseRouter.get(
+  '/getTotalSpentThisMonth',
+  AuthMiddleware.authenticateUser,
+  expenseController.totalSpentLastMonth
+);
+
+expenseRouter.get(
+  '/getAvergeDailySpending',
+  AuthMiddleware.authenticateUser,
+  expenseController.averageDailySpending
+);
+
+expenseRouter.get(
+  '/getHighestSpendingCategory',
+  AuthMiddleware.authenticateUser,
+  expenseController.getHighestSpendingCategory
+);
+
 export default expenseRouter;

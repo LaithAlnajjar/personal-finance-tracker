@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Plus, Upload, List } from "lucide-react";
+import { Plus, Upload, List, PieChart } from "lucide-react";
 import logo from "../assets/expensia-high-resolution-logo-transparent.png";
 
 export default function Sidebar() {
@@ -23,6 +23,16 @@ export default function Sidebar() {
 
         <li className="text-gray-500">
           <Link
+            to="overview"
+            className="flex items-center gap-2 rounded-lg p-2 hover:bg-gray-100"
+          >
+            <PieChart size={20} />
+            Overview
+          </Link>
+        </li>
+
+        <li className="text-gray-500">
+          <Link
             to=""
             className="flex items-center gap-2 rounded-lg p-2 hover:bg-gray-100"
           >
@@ -30,6 +40,7 @@ export default function Sidebar() {
             Expense List
           </Link>
         </li>
+
         <li className="text-gray-500">
           <Link
             to="import"

@@ -18,7 +18,6 @@ export default function NewExpense() {
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     const response = await api.post("/api/expense", input);
-    console.log(response);
   };
 
   return (

@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import ExpensesList from "./pages/ExpensesList";
 import NewExpense from "./pages/NewExpense";
 import ImportCSV from "./pages/ImportCSV";
+import Overview from "./pages/Overview";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<ExpensesList />} />
+          <Route path="overview" element={<Overview />} />
           <Route path="new" element={<NewExpense />} />
           <Route path="import" element={<ImportCSV />} />
         </Route>

@@ -21,7 +21,6 @@ export default function Login() {
     e.preventDefault();
     const response = await auth?.login(input);
     if (response) {
-      console.log(response);
       navigate("/dashboard");
     }
   };

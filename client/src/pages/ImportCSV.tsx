@@ -17,7 +17,6 @@ export default function ImportCSV() {
 
     try {
       const response = await api.post("/api/import", formData);
-      console.log("File uploaded successfully:", response.data);
     } catch (error) {
       console.error("Error uploading file:", error);
     }

@@ -21,7 +21,6 @@ export default function Register() {
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
     const reponse = await api.post("/api/register", input);
-    console.log(reponse);
     navigate("/");
   };
 

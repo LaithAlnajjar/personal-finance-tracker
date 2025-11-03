@@ -32,7 +32,6 @@ if (!fs.existsSync('./uploads')) {
 const importCSV = [
   upload.single('csvFile'),
   async (req: Request, res: Response) => {
-    console.log(req.file);
     if (!req.file) {
       return res.status(400).send('No file uploaded.');
     }
@@ -58,12 +57,14 @@ const importCSV = [
 
     try {
       for (const record of records) {
+        const title = record.title;
         const amount = parseFloat(record.amount);
         const date = new Date(record.date);
         const merchant = record.merchant;
         const category = record.category;
         const expense = await prisma.expense.create({
           data: {
+            title,
             amount,
             date,
             merchant,
