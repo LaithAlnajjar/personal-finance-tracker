@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
 import { Banknote, ClipboardCheck, Sun, Building2 } from "lucide-react";
+import { type Expense } from "../types/expense";
+import {
+  ResponsiveContainer,
+  LineChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Line,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 export default function Overview() {
   const [totalExpenses, setTotalExpenses] = useState<number | undefined>(
@@ -15,6 +26,7 @@ export default function Overview() {
   const [highestSpendingCategory, setHighestSpendingCategory] = useState<
     string | undefined
   >(undefined);
+  const [expensesThisMonth, setExpensesThisMonth] = useState<Expense[]>([]);
 
   useEffect(() => {
     const getTotalExpenses = async () => {
@@ -54,11 +66,56 @@ export default function Overview() {
         console.error("Error highestSpendingCategory", error);
       }
     };
+    const getExpensesThisMonth = async () => {
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      const params = new URLSearchParams({
+        from: startDate.toISOString(),
+        to: now.toISOString(),
+      });
+
+      const res = await api.get(`/api/expense?${params.toString()}`);
+      setExpensesThisMonth(res.data.data.expenses);
+    };
     getTotalExpenses();
     getTotalSpentThisMonth();
     getAverageDailySpending();
     getHighestSpendingCategory();
+    getExpensesThisMonth();
   }, []);
+
+  const dailyExpenses = (() => {
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date();
+    endDate.setHours(0, 0, 0, 0);
+
+    const dailyMap: Record<string, number> = {};
+    expensesThisMonth.forEach((exp) => {
+      const key = new Date(exp.date).toISOString().split("T")[0];
+      dailyMap[key] = (dailyMap[key] || 0) + exp.amount;
+    });
+
+    const result: { date: string; amount: number }[] = [];
+    const current = new Date(startDate);
+
+    while (current <= endDate) {
+      const key = current.toISOString().split("T")[0];
+
+      result.push({
+        date: current.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        amount: dailyMap[key] || 0,
+      });
+
+      current.setDate(current.getDate() + 1);
+    }
+    console.log(result);
+
+    return result;
+  })();
 
   return (
     <div>
@@ -111,6 +168,58 @@ export default function Overview() {
             Highest Spending Category
           </div>
         </div>
+      </div>
+      <div>
+        <ResponsiveContainer width="100%" aspect={3}>
+          <LineChart
+            data={dailyExpenses}
+            margin={{ top: 20, right: 50, left: 20, bottom: 20 }}
+          >
+            {/* X and Y axes */}
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 12, fill: "#4b5563" }}
+              axisLine={{ stroke: "#9ca3af" }}
+              tickLine={false}
+            />
+            <YAxis
+              dataKey="amount"
+              tick={{ fontSize: 12, fill: "#4b5563" }}
+              axisLine={{ stroke: "#9ca3af" }}
+              tickLine={false}
+              domain={["auto", "auto"]}
+            />
+
+            {/* Tooltip */}
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#f9fafb",
+                border: "1px solid #d1d5db",
+                borderRadius: 8,
+                padding: 10,
+              }}
+              labelStyle={{ fontWeight: "bold" }}
+              formatter={(value: number) => `$${value.toFixed(2)}`}
+            />
+
+            {/* Line */}
+            <Line
+              type="monotone"
+              dataKey="amount"
+              stroke="#10b981"
+              strokeWidth={3}
+              dot={{ r: 5, strokeWidth: 2, fill: "#fff", stroke: "#10b981" }}
+              activeDot={{ r: 7 }}
+            />
+
+            {/* Optional legend */}
+            <Legend
+              verticalAlign="top"
+              height={36}
+              wrapperStyle={{ fontSize: 14, fontWeight: "bold" }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

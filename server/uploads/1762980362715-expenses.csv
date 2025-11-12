@@ -1,0 +1,21 @@
+id,title,amount,category,merchant,date,notes
+1,Coffee and Croissant,6.50,Food & Drink,Starbucks,2025-10-29T08:30:00Z,Morning coffee before class
+2,Grocery Run,42.30,Groceries,Walmart,2025-10-29T18:00:00Z,Weekly groceries
+3,Bus Ticket,1.25,Transport,City Bus,2025-10-28T07:50:00Z,Commute to university
+4,Lunch with Friends,13.80,Food & Drink,Subway,2025-10-28T13:10:00Z,Had lunch after lecture
+5,Spotify Subscription,9.99,Entertainment,Spotify,2025-10-27T09:00:00Z,Monthly subscription renewal
+6,Electricity Bill,54.20,Bills,Jordan Electric Co.,2025-10-26T16:00:00Z,October payment
+7,Chicken Shawarma,4.50,Food & Drink,Reem Al Bawadi,2025-10-26T20:30:00Z,Dinner after gym
+8,Taxi to Mall,3.75,Transport,Careem,2025-10-25T15:40:00Z,Trip to buy shoes
+9,New Headphones,29.90,Electronics,TechZone,2025-10-25T17:00:00Z,Replacement for broken pair
+10,Online Course Fee,19.99,Education,Udemy,2025-10-24T10:00:00Z,Python for Data Science
+11,Weekend Pizza,11.25,Food & Drink,Domino's,2025-10-23T21:15:00Z,Shared with roommate
+12,Gym Membership,25.00,Fitness,Gold’s Gym,2025-10-22T09:00:00Z,Weekly renewal
+13,Laptop Charger,39.50,Electronics,Best Buy,2025-10-22T14:30:00Z,Needed replacement
+14,Notebook and Pens,7.80,Education,Office One,2025-10-21T12:10:00Z,Stationery restock
+15,Streaming Service,14.99,Entertainment,Netflix,2025-10-21T19:00:00Z,Monthly renewal
+16,Breakfast Sandwich,5.40,Food & Drink,McDonald's,2025-10-20T08:15:00Z,Quick breakfast before lab
+17,Uber to Campus,2.90,Transport,Uber,2025-10-19T07:40:00Z,Rushed to morning class
+18,Data Plan,10.00,Bills,Zain,2025-10-18T11:00:00Z,Prepaid mobile data
+19,Gift for Friend,23.50,Shopping,H&M,2025-10-18T17:20:00Z,Birthday present
+20,Ice Cream,3.20,Food & Drink,Cold Stone,2025-10-17T20:00:00Z,Treat after exam

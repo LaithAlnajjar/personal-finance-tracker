@@ -1,15 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../lib/api";
-
-type Expense = {
-  id: number;
-  title?: string;
-  amount: number;
-  category?: string;
-  merchant?: string;
-  date: string;
-  notes?: string;
-};
+import { type Expense } from "../types/expense";
 
 export default function ExpensesList() {
   const [expenses, setExpensesList] = useState<Expense[]>([]);

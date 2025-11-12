@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '../generated/prisma';
-import { connect } from 'node:http2';
 
 const prisma = new PrismaClient();
 
@@ -59,8 +58,14 @@ export default class expenseController {
 
       if (req.query.from || req.query.to) {
         where.date = {};
-        if (req.query.from) where.date.gte = req.query.from;
-        if (req.query.to) where.date.lte = req.query.to;
+        if (req.query.from) {
+          const from = new Date(req.query.from as string);
+          where.date.gte = from;
+        }
+        if (req.query.to) {
+          const to = new Date(req.query.to as string);
+          where.date.lte = to;
+        }
       }
 
       const expenses = await prisma.expense.findMany({ where, orderBy: { date: 'desc' } });
@@ -69,6 +74,7 @@ export default class expenseController {
         data: { expenses },
       });
     } catch (error) {
+      console.error(error);
       return res.status(500).json({
         success: false,
         message: 'Something went wrong',
