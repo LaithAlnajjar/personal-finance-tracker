@@ -60,4 +60,24 @@ export default class CategoryController {
       });
     }
   };
+
+  static async deleteCategory(req: Request, res: Response) {
+    try {
+      const id = req.params.expenseId;
+      const category = await prisma.category.delete({
+        where: {
+          id,
+        },
+      });
+      return res.status(200).json({
+        success: true,
+        data: { category },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Something went wrong',
+      });
+    }
+  }
 }
