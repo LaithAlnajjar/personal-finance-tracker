@@ -23,7 +23,7 @@ export default function Sidebar() {
 
         <li className="text-gray-500">
           <Link
-            to="overview"
+            to=""
             className="flex items-center gap-2 rounded-lg p-2 hover:bg-gray-100"
           >
             <PieChart size={20} />
@@ -33,7 +33,7 @@ export default function Sidebar() {
 
         <li className="text-gray-500">
           <Link
-            to=""
+            to="expensesList"
             className="flex items-center gap-2 rounded-lg p-2 hover:bg-gray-100"
           >
             <List size={20} />

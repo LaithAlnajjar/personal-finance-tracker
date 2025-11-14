@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
@@ -7,6 +7,16 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const prisma = new PrismaClient();
+
+const DEFAULT_CATEGORIES = [
+  { name: 'Dining' },
+  { name: 'Groceries' },
+  { name: 'Transport' },
+  { name: 'Utilities' },
+  { name: 'Rent/Mortgage' },
+  { name: 'Entertainment' },
+  { name: 'Uncategorized' },
+];
 
 export default class AuthController {
   static register = async (req: Request, res: Response, next: NextFunction) => {
@@ -37,6 +47,15 @@ export default class AuthController {
         name: user.name,
         createdAt: user.createdAt,
       };
+
+      const categoriesToCreate = DEFAULT_CATEGORIES.map((cat) => ({
+        ...cat,
+        userId: user.id,
+      }));
+
+      await prisma.category.createMany({
+        data: categoriesToCreate,
+      });
 
       return res.status(201).json({
         success: true,

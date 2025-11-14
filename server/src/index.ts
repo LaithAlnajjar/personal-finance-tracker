@@ -3,10 +3,8 @@ import dotenv from 'dotenv';
 import authRouter from './routes/authRoutes';
 import expenseRouter from './routes/expenseRoutes';
 import importRouter from './routes/importRoutes';
+import categoryRouter from './routes/categoryRoutes';
 import cors from 'cors';
-import fs from 'node:fs';
-import { parse } from 'csv-parse';
-import path from 'path';
 
 dotenv.config();
 
@@ -18,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', authRouter);
 app.use('/api/expense', expenseRouter);
+app.use('/api/categories', categoryRouter);
 app.use('/api/import', importRouter);
 
 const PORT = process.env.PORT;

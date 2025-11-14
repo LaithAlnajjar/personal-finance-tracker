@@ -14,8 +14,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />}>
-          <Route index element={<ExpensesList />} />
-          <Route path="overview" element={<Overview />} />
+          <Route index element={<Overview />} />
+          <Route path="expensesList" element={<ExpensesList />} />
           <Route path="new" element={<NewExpense />} />
           <Route path="import" element={<ImportCSV />} />
         </Route>

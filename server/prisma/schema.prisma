@@ -13,12 +13,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique
   name      String?
   password  String
   expenses  Expense[]
+  categories Category[] 
   createdAt DateTime  @default(now())
 }
 
@@ -30,8 +32,20 @@ model Expense {
   amount    Float
   date      DateTime
   merchant  String?
-  category  String?
-  notes     String?
+  categoryId String? 
+  category   Category? @relation(fields: [categoryId], references: [id], onUpdate: NoAction, onDelete: SetNull)
   createdAt DateTime @default(now())
   
+}
+
+model Category {
+  id     String @id @default(cuid())
+  name   String 
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+
+  expenses Expense[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
