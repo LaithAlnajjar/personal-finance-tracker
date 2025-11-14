@@ -61,14 +61,14 @@ const importCSV = [
         const amount = parseFloat(record.amount);
         const date = new Date(record.date);
         const merchant = record.merchant;
-        const category = record.category;
+        const categoryId = record.categoryId;
         const expense = await prisma.expense.create({
           data: {
             title,
             amount,
             date,
             merchant,
-            category,
+            categoryId,
             user: {
               connect: { id: userId },
             },

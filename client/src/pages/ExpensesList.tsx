@@ -40,7 +40,7 @@ export default function ExpensesList() {
                     {expense.title || "Untitled"}
                   </span>
                   <span className="text-sm text-gray-500">
-                    {expense.category || "Uncategorized"} •{" "}
+                    {expense.category?.name ?? "Uncategorized"} •{" "}
                     {expense.merchant || "No merchant"}
                   </span>
                 </div>

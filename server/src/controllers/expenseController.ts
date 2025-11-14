@@ -1,12 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '../generated/prisma';
-
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export default class expenseController {
   static async createExpense(req: Request, res: Response) {
     try {
-      const { title, merchant, category, notes } = req.body;
+      const { title, merchant, categoryId } = req.body;
       if (!req.user || !req.user.id) {
         return res.status(401).json({
           success: false,
@@ -22,11 +21,8 @@ export default class expenseController {
           amount,
           date,
           merchant,
-          category,
-          notes,
-          user: {
-            connect: { id: userId },
-          },
+          categoryId,
+          userId: userId,
         },
       });
       return res.status(200).json({
@@ -52,8 +48,11 @@ export default class expenseController {
       }
       const userId = req.user.id;
       const where: any = { userId };
+
       if (req.query.category) {
-        where.category = req.query.category;
+        where.category = {
+          name: req.query.category as string,
+        };
       }
 
       if (req.query.from || req.query.to) {
@@ -68,7 +67,11 @@ export default class expenseController {
         }
       }
 
-      const expenses = await prisma.expense.findMany({ where, orderBy: { date: 'desc' } });
+      const expenses = await prisma.expense.findMany({
+        where,
+        orderBy: { date: 'desc' },
+        include: { category: true },
+      });
       return res.status(200).json({
         success: true,
         data: { expenses },
@@ -84,15 +87,39 @@ export default class expenseController {
 
   static async deleteExpense(req: Request, res: Response) {
     try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized: User not found',
+        });
+      }
       const id = parseInt(req.params.expenseId);
-      const expense = await prisma.expense.delete({
+      const userId = req.user.id;
+
+      if (isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid expense ID',
+        });
+      }
+
+      const result = await prisma.expense.deleteMany({
         where: {
           id,
+          userId,
         },
       });
+
+      if (result.count === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Expense not found or you do not have permission to delete it',
+        });
+      }
+
       return res.status(200).json({
         success: true,
-        data: { expense },
+        message: 'Expense deleted successfully',
       });
     } catch (error) {
       return res.status(500).json({
@@ -104,20 +131,59 @@ export default class expenseController {
 
   static async editExpense(req: Request, res: Response) {
     try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized: User not found',
+        });
+      }
+
       const id = parseInt(req.params.expenseId);
-      const { merchant, category, notes } = req.body;
+      const userId = req.user.id;
+      const { title, merchant, categoryId } = req.body;
       const amount = parseFloat(req.body.amount);
-      const expense = await prisma.expense.update({
+      const date = req.body.date ? new Date(req.body.date) : undefined;
+
+      if (isNaN(id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid expense ID',
+        });
+      }
+
+      const dataToUpdate: any = {
+        title,
+        merchant,
+        categoryId,
+        amount,
+        date,
+      };
+
+      Object.keys(dataToUpdate).forEach(
+        (key) => dataToUpdate[key] === undefined && delete dataToUpdate[key]
+      );
+
+      if (isNaN(amount)) {
+        delete dataToUpdate.amount;
+      }
+
+      const result = await prisma.expense.updateMany({
         where: {
           id,
+          userId,
         },
-        data: {
-          amount,
-          merchant,
-          category,
-          notes,
-        },
+        data: dataToUpdate,
       });
+
+      if (result.count === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Expense not found or you do not have permission to edit it',
+        });
+      }
+
+      const expense = await prisma.expense.findUnique({ where: { id } });
+
       return res.status(200).json({
         success: true,
         data: { expense },
@@ -156,7 +222,7 @@ export default class expenseController {
     }
   }
 
-  static async totalSpentLastMonth(req: Request, res: Response) {
+  static async totalSpentThisMonth(req: Request, res: Response) {
     try {
       if (!req.user || !req.user.id) {
         return res.status(401).json({
@@ -211,6 +277,7 @@ export default class expenseController {
       const now = new Date();
       const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       const endDate = now;
+      const daysSoFar = now.getDate();
 
       const averageSpending = await prisma.expense.aggregate({
         _sum: {
@@ -226,7 +293,7 @@ export default class expenseController {
       });
 
       const total = averageSpending._sum.amount ?? 0;
-      const totalAverageSpending = total / 30;
+      const totalAverageSpending = daysSoFar > 0 ? total / daysSoFar : 0;
 
       return res.status(200).json({
         success: true,
@@ -250,10 +317,19 @@ export default class expenseController {
         });
       }
       const userId = req.user.id;
+
+      const now = new Date();
+      const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endDate = now;
+
       const highestSpendingCategoryObject = await prisma.expense.groupBy({
-        by: ['category'],
+        by: ['categoryId'],
         where: {
           userId,
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
         },
         _sum: {
           amount: true,
@@ -266,11 +342,36 @@ export default class expenseController {
         take: 1,
       });
 
-      const highestSpendingCategory = highestSpendingCategoryObject[0]?.category ?? null;
+      if (!highestSpendingCategoryObject || highestSpendingCategoryObject.length === 0) {
+        return res.status(200).json({
+          success: true,
+          data: { highestSpendingCategory: null },
+        });
+      }
+
+      const topCategory = highestSpendingCategoryObject[0];
+      const total = topCategory._sum.amount ?? 0;
+
+      if (!topCategory.categoryId) {
+        return res.status(200).json({
+          success: true,
+          data: { highestSpendingCategory: { name: 'Uncategorized', total } },
+        });
+      }
+
+      const category = await prisma.category.findUnique({
+        where: { id: topCategory.categoryId },
+        select: { name: true },
+      });
+
+      const result = {
+        name: category?.name ?? 'Unknown',
+        total: total,
+      };
 
       return res.status(200).json({
         success: true,
-        data: { highestSpendingCategory },
+        data: { highestSpendingCategory: result },
       });
     } catch (err) {
       console.error(err);

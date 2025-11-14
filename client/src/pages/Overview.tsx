@@ -14,8 +14,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart, // Added
-  Bar, // Added
+  BarChart,
+  Bar,
 } from "recharts";
 
 const COLORS = [
@@ -51,9 +51,10 @@ export default function Overview() {
   const [dailySpending, setDailySpending] = useState<number | undefined>(
     undefined
   );
-  const [highestSpendingCategory, setHighestSpendingCategory] = useState<
-    string | undefined
-  >(undefined);
+  const [highestSpendingCategory, setHighestSpendingCategory] = useState<{
+    name: string;
+    total: number;
+  } | null>(null);
   const [expensesThisMonth, setExpensesThisMonth] = useState<Expense[]>([]);
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function Overview() {
     };
     const getTotalSpentThisMonth = async () => {
       try {
-        const res = await api.get("/api/expense/getTotalSpentThisMonth");
+        const res = await api.get("/api/expense/totalSpentThisMonth");
         const total = res.data.data.total;
         const roundedTotal = Number(total.toFixed(2));
         setTotalSpentThisMonth(roundedTotal);
@@ -77,7 +78,7 @@ export default function Overview() {
     };
     const getAverageDailySpending = async () => {
       try {
-        const res = await api.get("/api/expense/getAvergeDailySpending");
+        const res = await api.get("/api/expense/averageDailySpending");
         const total = res.data.data.totalAverageSpending;
         const roundedTotal = Number(total.toFixed(2));
         setDailySpending(roundedTotal);
@@ -140,7 +141,6 @@ export default function Overview() {
 
       current.setDate(current.getDate() + 1);
     }
-    console.log(result);
 
     return result;
   })();
@@ -148,7 +148,7 @@ export default function Overview() {
   const categorySpending = (() => {
     const categoryMap: Record<string, number> = {};
     expensesThisMonth.forEach((exp) => {
-      const key = exp.category?.toLowerCase() || "other";
+      const key = exp.category?.name?.toLowerCase() || "uncategorized";
       categoryMap[key] = (categoryMap[key] || 0) + exp.amount;
     });
 
@@ -207,7 +207,7 @@ export default function Overview() {
           </div>
           <div className="text-gray-600">
             <div className="text-xl text-black font-bold">
-              {highestSpendingCategory ?? "—"}
+              {highestSpendingCategory?.name ?? "—"}
             </div>
             Highest Spending Category
           </div>

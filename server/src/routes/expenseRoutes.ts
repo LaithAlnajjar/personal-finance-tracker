@@ -24,7 +24,7 @@ expenseRouter.get(
 expenseRouter.get(
   '/getTotalSpentThisMonth',
   AuthMiddleware.authenticateUser,
-  expenseController.totalSpentLastMonth
+  expenseController.totalSpentThisMonth
 );
 
 expenseRouter.get(
