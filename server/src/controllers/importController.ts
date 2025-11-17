@@ -29,19 +29,28 @@ if (!fs.existsSync('./uploads')) {
   fs.mkdirSync('./uploads');
 }
 
+// --- THIS IS THE RULE-BASED CATEGORIZER ---
+/**
+ * A simple rule-based categorizer.
+ * It first tries to match a name, then falls back to merchant keywords.
+ */
 const getCategoryId = (
   merchant: string,
   categoryName: string | undefined,
-  categoryMap: Map<string, string>,
-  uncategorizedId: string
+  categoryMap: Map<string, string>, // <-- FIXED TYPE (string)
+  uncategorizedId: string // <-- FIXED TYPE (string)
 ): string => {
+  // <-- FIXED TYPE (string)
+  // 1. Try to match by the provided category name
   if (categoryName) {
     const id = categoryMap.get(categoryName.toLowerCase());
-    if (id) {
+    // Check for undefined, not just truthy
+    if (id !== undefined) {
       return id;
     }
   }
 
+  // 2. If no match, try to guess from merchant keywords
   const lowerMerchant = merchant.toLowerCase();
 
   if (
@@ -49,25 +58,27 @@ const getCategoryId = (
     lowerMerchant.includes('coffee') ||
     lowerMerchant.includes('restaurant')
   ) {
-    return categoryMap.get('dining') || uncategorizedId;
+    return categoryMap.get('dining') ?? uncategorizedId;
   }
   if (
     lowerMerchant.includes('uber') ||
     lowerMerchant.includes('lyft') ||
     lowerMerchant.includes('gas')
   ) {
-    return categoryMap.get('transport') || uncategorizedId;
+    return categoryMap.get('transport') ?? uncategorizedId;
   }
   if (
     lowerMerchant.includes('kroger') ||
     lowerMerchant.includes('whole foods') ||
     lowerMerchant.includes('grocer')
   ) {
-    return categoryMap.get('groceries') || uncategorizedId;
+    return categoryMap.get('groceries') ?? uncategorizedId;
   }
 
+  // 3. Fallback to "Uncategorized"
   return uncategorizedId;
 };
+// ------------------------------------------
 
 const importCSV = [
   upload.single('csvFile'),
@@ -86,18 +97,29 @@ const importCSV = [
     const filePath = req.file.path;
 
     try {
+      // 1. Fetch user's categories ONCE
       const userCategories = await prisma.category.findMany({
         where: { userId },
         select: { id: true, name: true },
       });
 
-      const categoryMap = new Map<string, string>();
+      // 2. Create a fast lookup map (name -> id)
+      const categoryMap = new Map<string, string>(); // <-- FIXED TYPE (string)
       userCategories.forEach((cat) => {
         categoryMap.set(cat.name.toLowerCase(), cat.id);
       });
 
-      const uncategorizedId = categoryMap.get('uncategorized') || '';
+      const uncategorizedId = categoryMap.get('uncategorized');
 
+      // Explicitly check for undefined
+      if (uncategorizedId === undefined) {
+        return res.status(500).json({
+          success: false,
+          message: 'User account is missing an "Uncategorized" category.',
+        });
+      }
+
+      // 3. Prepare an array for batch creation
       const expensesToCreate: Prisma.ExpenseCreateManyInput[] = [];
 
       const parser = fs
@@ -109,11 +131,13 @@ const importCSV = [
         const date = new Date(record.date);
         const merchant = record.merchant;
 
+        // 4. Validate data
         if (isNaN(amount) || !date.getTime() || !merchant) {
           console.warn('Skipping invalid CSV row:', record);
           continue;
         }
 
+        // 5. Run the categorizer
         const categoryId = getCategoryId(merchant, record.category, categoryMap, uncategorizedId);
 
         expensesToCreate.push({
@@ -144,6 +168,14 @@ const importCSV = [
       }
     } catch (err) {
       console.error(err);
+      if ((err as any).code === 'P2003') {
+        return res.status(500).json({
+          success: false,
+          message:
+            'CSV import failed: Foreign key constraint violation. A category ID was invalid.',
+          error: (err as any).meta,
+        });
+      }
       return res.status(500).json({
         success: false,
         message: 'Something went wrong during the import.',

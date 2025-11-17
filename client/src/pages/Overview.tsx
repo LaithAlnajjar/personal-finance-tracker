@@ -68,7 +68,7 @@ export default function Overview() {
     };
     const getTotalSpentThisMonth = async () => {
       try {
-        const res = await api.get("/api/expense/totalSpentThisMonth");
+        const res = await api.get("/api/expense/getTotalSpentThisMonth");
         const total = res.data.data.total;
         const roundedTotal = Number(total.toFixed(2));
         setTotalSpentThisMonth(roundedTotal);
@@ -78,7 +78,7 @@ export default function Overview() {
     };
     const getAverageDailySpending = async () => {
       try {
-        const res = await api.get("/api/expense/averageDailySpending");
+        const res = await api.get("/api/expense/getAverageDailySpending");
         const total = res.data.data.totalAverageSpending;
         const roundedTotal = Number(total.toFixed(2));
         setDailySpending(roundedTotal);

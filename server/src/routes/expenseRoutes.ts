@@ -28,7 +28,7 @@ expenseRouter.get(
 );
 
 expenseRouter.get(
-  '/getAvergeDailySpending',
+  '/getAverageDailySpending',
   AuthMiddleware.authenticateUser,
   expenseController.averageDailySpending
 );
