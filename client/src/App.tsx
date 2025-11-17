@@ -6,6 +6,7 @@ import ExpensesList from "./pages/ExpensesList";
 import NewExpense from "./pages/NewExpense";
 import ImportCSV from "./pages/ImportCSV";
 import Overview from "./pages/Overview";
+import Categories from "./pages/Categories";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="expensesList" element={<ExpensesList />} />
           <Route path="new" element={<NewExpense />} />
           <Route path="import" element={<ImportCSV />} />
+          <Route path="settings/categories" element={<Categories />} />
         </Route>
       </Routes>
     </Router>

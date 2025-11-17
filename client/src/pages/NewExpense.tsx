@@ -1,4 +1,4 @@
-import React, {
+import {
   useState,
   useEffect,
   type SyntheticEvent,
@@ -27,7 +27,7 @@ export default function NewExpense() {
     const fetchCategories = async () => {
       try {
         const response = await api.get("/api/categories");
-        setCategories(response.data);
+        setCategories(response.data.data.categories);
         const defaultCat = response.data.find(
           (c: Category) => c.name === "Uncategorized"
         );
@@ -53,7 +53,7 @@ export default function NewExpense() {
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    const response = await api.post("/api/expense", input);
+    await api.post("/api/expense", input);
   };
 
   return (
