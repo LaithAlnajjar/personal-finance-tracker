@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import fs from 'node:fs';
 import { parse } from 'csv-parse';
 import multer from 'multer';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -29,6 +29,46 @@ if (!fs.existsSync('./uploads')) {
   fs.mkdirSync('./uploads');
 }
 
+const getCategoryId = (
+  merchant: string,
+  categoryName: string | undefined,
+  categoryMap: Map<string, string>,
+  uncategorizedId: string
+): string => {
+  if (categoryName) {
+    const id = categoryMap.get(categoryName.toLowerCase());
+    if (id) {
+      return id;
+    }
+  }
+
+  const lowerMerchant = merchant.toLowerCase();
+
+  if (
+    lowerMerchant.includes('starbucks') ||
+    lowerMerchant.includes('coffee') ||
+    lowerMerchant.includes('restaurant')
+  ) {
+    return categoryMap.get('dining') || uncategorizedId;
+  }
+  if (
+    lowerMerchant.includes('uber') ||
+    lowerMerchant.includes('lyft') ||
+    lowerMerchant.includes('gas')
+  ) {
+    return categoryMap.get('transport') || uncategorizedId;
+  }
+  if (
+    lowerMerchant.includes('kroger') ||
+    lowerMerchant.includes('whole foods') ||
+    lowerMerchant.includes('grocer')
+  ) {
+    return categoryMap.get('groceries') || uncategorizedId;
+  }
+
+  return uncategorizedId;
+};
+
 const importCSV = [
   upload.single('csvFile'),
   async (req: Request, res: Response) => {
@@ -43,46 +83,79 @@ const importCSV = [
       });
     }
     const userId = req.user.id;
-
     const filePath = req.file.path;
-    const results: any[] = [];
-
-    const records = [];
-    const parser = fs
-      .createReadStream(filePath)
-      .pipe(parse({ columns: true, skip_empty_lines: true }));
-    for await (const record of parser) {
-      records.push(record);
-    }
 
     try {
-      for (const record of records) {
-        const title = record.title;
+      const userCategories = await prisma.category.findMany({
+        where: { userId },
+        select: { id: true, name: true },
+      });
+
+      const categoryMap = new Map<string, string>();
+      userCategories.forEach((cat) => {
+        categoryMap.set(cat.name.toLowerCase(), cat.id);
+      });
+
+      const uncategorizedId = categoryMap.get('uncategorized') || '';
+
+      const expensesToCreate: Prisma.ExpenseCreateManyInput[] = [];
+
+      const parser = fs
+        .createReadStream(filePath)
+        .pipe(parse({ columns: true, skip_empty_lines: true }));
+
+      for await (const record of parser) {
         const amount = parseFloat(record.amount);
         const date = new Date(record.date);
         const merchant = record.merchant;
-        const categoryId = record.categoryId;
-        const expense = await prisma.expense.create({
-          data: {
-            title,
-            amount,
-            date,
-            merchant,
-            categoryId,
-            user: {
-              connect: { id: userId },
-            },
-          },
+
+        if (isNaN(amount) || !date.getTime() || !merchant) {
+          console.warn('Skipping invalid CSV row:', record);
+          continue;
+        }
+
+        const categoryId = getCategoryId(merchant, record.category, categoryMap, uncategorizedId);
+
+        expensesToCreate.push({
+          title: record.title || '',
+          amount,
+          date,
+          merchant,
+          categoryId,
+          userId,
+        });
+      }
+
+      // 6. Create all expenses in ONE database call
+      if (expensesToCreate.length > 0) {
+        const result = await prisma.expense.createMany({
+          data: expensesToCreate,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: `Successfully imported ${result.count} expenses.`,
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'No valid expenses found in CSV file.',
         });
       }
     } catch (err) {
       console.error(err);
       return res.status(500).json({
         success: false,
-        message: 'Something went wrong',
+        message: 'Something went wrong during the import.',
+      });
+    } finally {
+      // 7. Always delete the temp file
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error('Failed to delete temporary CSV file:', filePath, err);
+        }
       });
     }
-    return res.status(200).json(records);
   },
 ];
 
