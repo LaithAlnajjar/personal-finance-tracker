@@ -15,14 +15,17 @@ export const fileStorage = multer.diskStorage({
     file: Express.Multer.File,
     callback: DestinationCallback
   ): void => {
+    // We'll store uploaded files in a temporary directory.
     callback(null, './uploads');
   },
 
   filename: (req: Request, file: Express.Multer.File, callback: FileNameCallback): void => {
+    // Prepend timestamp to the original filename to prevent name collisions.
     callback(null, Date.now() + '-' + file.originalname);
   },
 });
 
+// This is our multer middleware for handling single file uploads.
 const upload = multer({ storage: fileStorage });
 
 if (!fs.existsSync('./uploads')) {
@@ -33,12 +36,13 @@ if (!fs.existsSync('./uploads')) {
 /**
  * A simple rule-based categorizer.
  * It first tries to match a name, then falls back to merchant keywords.
+ * TODO: This is a bit naive. Could be replaced with a more robust rules engine or ML model.
  */
 const getCategoryId = (
   merchant: string,
   categoryName: string | undefined,
-  categoryMap: Map<string, string>, // <-- FIXED TYPE (string)
-  uncategorizedId: string // <-- FIXED TYPE (string)
+  categoryMap: Map<string, string>,
+  uncategorizedId: string
 ): string => {
   // <-- FIXED TYPE (string)
   // 1. Try to match by the provided category name
@@ -50,26 +54,22 @@ const getCategoryId = (
     }
   }
 
-  // 2. If no match, try to guess from merchant keywords
+  // 2. If no direct category match, try to guess from merchant keywords.
   const lowerMerchant = merchant.toLowerCase();
 
-  if (
-    lowerMerchant.includes('starbucks') ||
-    lowerMerchant.includes('coffee') ||
-    lowerMerchant.includes('restaurant')
-  ) {
+  if (lowerMerchant.includes('coffee') || lowerMerchant.includes('restaurant')) {
     return categoryMap.get('dining') ?? uncategorizedId;
   }
   if (
     lowerMerchant.includes('uber') ||
-    lowerMerchant.includes('lyft') ||
-    lowerMerchant.includes('gas')
+    lowerMerchant.includes('taxi') ||
+    lowerMerchant.includes('car')
   ) {
     return categoryMap.get('transport') ?? uncategorizedId;
   }
   if (
-    lowerMerchant.includes('kroger') ||
-    lowerMerchant.includes('whole foods') ||
+    lowerMerchant.includes('supermarket') ||
+    lowerMerchant.includes('food') ||
     lowerMerchant.includes('grocer')
   ) {
     return categoryMap.get('groceries') ?? uncategorizedId;
@@ -78,7 +78,6 @@ const getCategoryId = (
   // 3. Fallback to "Uncategorized"
   return uncategorizedId;
 };
-// ------------------------------------------
 
 const importCSV = [
   upload.single('csvFile'),
@@ -96,6 +95,7 @@ const importCSV = [
     const userId = req.user.id;
     const filePath = req.file.path;
 
+    // This whole process is wrapped in a try/catch/finally to ensure the temp file is always deleted.
     try {
       // 1. Fetch user's categories ONCE
       const userCategories = await prisma.category.findMany({
@@ -103,15 +103,16 @@ const importCSV = [
         select: { id: true, name: true },
       });
 
-      // 2. Create a fast lookup map (name -> id)
-      const categoryMap = new Map<string, string>(); // <-- FIXED TYPE (string)
+      // 2. Create a fast lookup map (name -> id) for performance.
+      // Avoids hitting the DB for every row in the CSV.
+      const categoryMap = new Map<string, string>();
       userCategories.forEach((cat) => {
         categoryMap.set(cat.name.toLowerCase(), cat.id);
       });
 
       const uncategorizedId = categoryMap.get('uncategorized');
 
-      // Explicitly check for undefined
+      // If the user somehow deleted their 'Uncategorized' category, we can't proceed.
       if (uncategorizedId === undefined) {
         return res.status(500).json({
           success: false,
@@ -119,7 +120,7 @@ const importCSV = [
         });
       }
 
-      // 3. Prepare an array for batch creation
+      // 3. Prepare an array for batch creation to improve DB performance.
       const expensesToCreate: Prisma.ExpenseCreateManyInput[] = [];
 
       const parser = fs
@@ -131,7 +132,7 @@ const importCSV = [
         const date = new Date(record.date);
         const merchant = record.merchant;
 
-        // 4. Validate data
+        // 4. Basic validation for each row. Skip rows that are obviously broken.
         if (isNaN(amount) || !date.getTime() || !merchant) {
           console.warn('Skipping invalid CSV row:', record);
           continue;
@@ -168,6 +169,8 @@ const importCSV = [
       }
     } catch (err) {
       console.error(err);
+      // P2003 is Prisma's error code for a foreign key constraint failure.
+      // This can happen if the CSV contains a categoryId that doesn't exist for this user.
       if ((err as any).code === 'P2003') {
         return res.status(500).json({
           success: false,
@@ -181,7 +184,7 @@ const importCSV = [
         message: 'Something went wrong during the import.',
       });
     } finally {
-      // 7. Always delete the temp file
+      // 7. Always delete the temp file, regardless of success or failure.
       fs.unlink(filePath, (err) => {
         if (err) {
           console.error('Failed to delete temporary CSV file:', filePath, err);

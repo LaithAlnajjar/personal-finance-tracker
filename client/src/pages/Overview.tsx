@@ -157,7 +157,6 @@ export default function Overview() {
   return (
     <div>
       <div className="flex justify-evenly flex-wrap gap-6 ">
-        {/* Total Spending This Month */}
         <div className="flex p-8 rounded-xl bg-white shadow items-center gap-7 w-80">
           <div className="bg-[#d8f3dc] rounded-full h-17 w-17 flex items-center justify-center">
             <Banknote size={36} color="#2d6a4f" />
@@ -169,7 +168,6 @@ export default function Overview() {
             Total Spending This Month
           </div>
         </div>
-        {/* Total Expenses Tracked */}
         <div className="flex p-8 rounded-xl bg-white shadow items-center gap-7 w-80">
           <div className="bg-[#e0e7ff] rounded-full h-17 w-17 flex items-center justify-center">
             <ClipboardCheck size={36} color="#3730a3" />
@@ -181,7 +179,6 @@ export default function Overview() {
             Total Expenses Tracked
           </div>
         </div>
-        {/* Average Daily Spending */}
         <div className="flex p-8 rounded-xl bg-white shadow items-center gap-7 w-80">
           <div className="bg-[#fff3bf] rounded-full h-17 w-17 flex items-center justify-center">
             <Sun size={36} color="#b45309" />
@@ -193,7 +190,6 @@ export default function Overview() {
             Average Daily Spending
           </div>
         </div>
-        {/* Highest Spending Category */}
         <div className="flex p-8 rounded-xl bg-white shadow items-center gap-7 w-80">
           <div className="bg-[#fde2e4] rounded-full h-17 w-17 flex items-center justify-center">
             <Building2 size={36} color="#b91c1c" />
@@ -208,7 +204,6 @@ export default function Overview() {
       </div>
 
       <div className="flex flex-col gap-6 mt-8">
-        {/* --- LINE CHART BLOCK --- */}
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-2/3 bg-white p-4 rounded-xl shadow text-center">
             <h3 className="text-lg font-semibold text-gray-700 mb-4 ml-4">
@@ -268,7 +263,6 @@ export default function Overview() {
               </ResponsiveContainer>
             </div>
           </div>
-          {/* --- PIE CHART BLOCK --- */}
           <div className="lg:w-1/3 bg-white p-4 rounded-xl shadow">
             <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
               Spending by Category
@@ -347,7 +341,6 @@ export default function Overview() {
           </div>
         </div>
 
-        {/* --- BAR CHART BLOCK (New) --- */}
         <div className="w-full bg-white p-4 rounded-xl shadow">
           <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
             Spending by Category

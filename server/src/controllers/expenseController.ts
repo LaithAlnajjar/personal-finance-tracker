@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 export default class expenseController {
@@ -13,7 +14,9 @@ export default class expenseController {
         });
       }
       const userId = req.user.id;
+      // Ensure amount is a number. parseFloat will handle string inputs.
       const amount = parseFloat(req.body.amount);
+      // Client should send a string that the Date constructor can parse.
       const date = new Date(req.body.date);
       const expense = await prisma.expense.create({
         data: {
@@ -47,6 +50,7 @@ export default class expenseController {
         });
       }
       const userId = req.user.id;
+      // Using `any` here to dynamically build the where clause.
       const where: any = { userId };
 
       if (req.query.category) {
@@ -68,6 +72,8 @@ export default class expenseController {
       }
 
       const isDateRangeQuery = req.query.from || req.query.to;
+      // Special case for date range queries without pagination.
+      // This is useful for chart data where we need all data points for a given range.
       if (isDateRangeQuery && !req.query.page && !req.query.limit) {
         const expenses = await prisma.expense.findMany({
           where,
@@ -88,6 +94,7 @@ export default class expenseController {
       const limit = parseInt(req.query.limit as string) || 10;
       const skip = (page - 1) * limit;
 
+      // Use a transaction to ensure count and findMany are consistent.
       const [expenses, totalExpenses] = await prisma.$transaction([
         prisma.expense.findMany({
           where,
@@ -108,7 +115,6 @@ export default class expenseController {
           totalExpenses,
           totalPages,
         },
-        where,
       });
     } catch (error) {
       console.error(error);
@@ -144,6 +150,7 @@ export default class expenseController {
         },
       });
 
+      // If count is 0, the expense either didn't exist or didn't belong to the user.
       if (result.count === 0) {
         return res.status(404).json({
           success: false,
@@ -193,7 +200,9 @@ export default class expenseController {
         date,
       };
 
+      // Filter out any undefined values so we don't overwrite existing data with null.
       Object.keys(dataToUpdate).forEach(
+        // @ts-ignore
         (key) => dataToUpdate[key] === undefined && delete dataToUpdate[key]
       );
 
@@ -201,6 +210,8 @@ export default class expenseController {
         delete dataToUpdate.amount;
       }
 
+      // updateMany ensures we only update the expense if it belongs to the user.
+      // This prevents a user from editing another user's expenses.
       const result = await prisma.expense.updateMany({
         where: {
           id,
@@ -209,6 +220,7 @@ export default class expenseController {
         data: dataToUpdate,
       });
 
+      // If count is 0, the expense wasn't found or didn't belong to the user.
       if (result.count === 0) {
         return res.status(404).json({
           success: false,
@@ -216,6 +228,7 @@ export default class expenseController {
         });
       }
 
+      // Fetch the updated expense to return it in the response.
       const expense = await prisma.expense.findUnique({
         where: { id },
         include: { category: true },
@@ -286,6 +299,7 @@ export default class expenseController {
         },
       });
 
+      // Prisma's aggregate returns _sum: { amount: number | null }. Default to 0 if null.
       const total = totalSpent._sum.amount ?? 0;
 
       return res.status(200).json({
@@ -314,6 +328,7 @@ export default class expenseController {
       const now = new Date();
       const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       const endDate = now;
+      // Get current day of the month for the average calculation.
       const daysSoFar = now.getDate();
 
       const averageSpending = await prisma.expense.aggregate({
@@ -330,6 +345,7 @@ export default class expenseController {
       });
 
       const total = averageSpending._sum.amount ?? 0;
+      // Avoid division by zero on the first day of the month if no expenses yet.
       const totalAverageSpending = daysSoFar > 0 ? total / daysSoFar : 0;
 
       return res.status(200).json({
@@ -359,6 +375,7 @@ export default class expenseController {
       const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       const endDate = now;
 
+      // Group by category, sum amounts, order by sum descending, and take the top one.
       const highestSpendingCategoryObject = await prisma.expense.groupBy({
         by: ['categoryId'],
         where: {
@@ -379,6 +396,7 @@ export default class expenseController {
         take: 1,
       });
 
+      // Handle case where there are no expenses for the period.
       if (!highestSpendingCategoryObject || highestSpendingCategoryObject.length === 0) {
         return res.status(200).json({
           success: true,
@@ -389,6 +407,7 @@ export default class expenseController {
       const topCategory = highestSpendingCategoryObject[0];
       const total = topCategory._sum.amount ?? 0;
 
+      // Handle expenses that might not have a categoryId.
       if (!topCategory.categoryId) {
         return res.status(200).json({
           success: true,
@@ -396,6 +415,7 @@ export default class expenseController {
         });
       }
 
+      // We only get the categoryId from groupBy, so we need to fetch the category name.
       const category = await prisma.category.findUnique({
         where: { id: topCategory.categoryId },
         select: { name: true },
