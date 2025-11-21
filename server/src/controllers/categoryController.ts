@@ -31,6 +31,29 @@ export default class CategoryController {
     }
   };
 
+  static updateCategory = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { name } = req.body;
+
+      const updatedCategory = await prisma.category.update({
+        where: { id },
+        data: { name },
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: { updatedCategory },
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        success: false,
+        message: 'Something went wrong',
+      });
+    }
+  };
+
   static createCategory = async (req: Request, res: Response) => {
     try {
       if (!req.user || !req.user.id) {
@@ -63,7 +86,7 @@ export default class CategoryController {
 
   static async deleteCategory(req: Request, res: Response) {
     try {
-      const id = req.params.expenseId;
+      const { id } = req.params;
       const category = await prisma.category.delete({
         where: {
           id,
