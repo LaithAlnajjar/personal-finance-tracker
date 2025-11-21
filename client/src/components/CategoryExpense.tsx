@@ -10,13 +10,13 @@ interface Category {
 interface CategoryExpenseProps {
   expense: Expense;
   categories: Category[];
-  refetchExpenses: () => Promise<void>;
+  setExpenses: React.Dispatch<React.SetStateAction<Expense[]>>;
 }
 
 export default function CategoryExpense({
   expense,
   categories,
-  refetchExpenses,
+  setExpenses,
 }: CategoryExpenseProps) {
   const [editing, setEditing] = useState<boolean>(false);
   const [categoryId, setCategoryId] = useState<string>(
@@ -35,11 +35,16 @@ export default function CategoryExpense({
 
   const handleSave = async () => {
     try {
-      await api.put(`/api/expense/${expense.id}`, {
+      const res = await api.put(`/api/expense/${expense.id}`, {
         categoryId: categoryId || null,
       });
+      const updatedExpense = res.data.data.expense;
+      setExpenses((prevExpenses) =>
+        prevExpenses.map((exp) =>
+          exp.id === updatedExpense.id ? updatedExpense : exp
+        )
+      );
       setEditing(false);
-      await refetchExpenses();
     } catch (error) {
       console.error("Failed to save category", error);
       alert("Failed to save. Please try again.");

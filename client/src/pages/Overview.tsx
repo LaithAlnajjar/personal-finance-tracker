@@ -58,59 +58,52 @@ export default function Overview() {
   const [expensesThisMonth, setExpensesThisMonth] = useState<Expense[]>([]);
 
   useEffect(() => {
-    const getTotalExpenses = async () => {
-      try {
-        const res = await api.get("/api/expense/getTotalExpenses");
-        setTotalExpenses(res.data.data.totalEpxenses);
-      } catch (error) {
-        console.error("Error fetching expenses:", error);
-      }
-    };
-    const getTotalSpentThisMonth = async () => {
-      try {
-        const res = await api.get("/api/expense/getTotalSpentThisMonth");
-        const total = res.data.data.total;
-        const roundedTotal = Number(total.toFixed(2));
-        setTotalSpentThisMonth(roundedTotal);
-      } catch (error) {
-        console.error("Error fectching total spent this month", error);
-      }
-    };
-    const getAverageDailySpending = async () => {
-      try {
-        const res = await api.get("/api/expense/getAverageDailySpending");
-        const total = res.data.data.totalAverageSpending;
-        const roundedTotal = Number(total.toFixed(2));
-        setDailySpending(roundedTotal);
-      } catch (error) {
-        console.error("Error fectching average daily spending", error);
-      }
-    };
-    const getHighestSpendingCategory = async () => {
-      try {
-        const res = await api.get("/api/expense/getHighestSpendingCategory");
-        const highestSpending = res.data.data.highestSpendingCategory;
-        setHighestSpendingCategory(highestSpending);
-      } catch (error) {
-        console.error("Error highestSpendingCategory", error);
-      }
-    };
-    const getExpensesThisMonth = async () => {
+    const fetchData = async () => {
       const now = new Date();
       const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
       const params = new URLSearchParams({
         from: startDate.toISOString(),
         to: now.toISOString(),
       });
+      const endpoints = [
+        "/api/expense/getTotalExpenses",
+        "/api/expense/getTotalSpentThisMonth",
+        "/api/expense/getAverageDailySpending",
+        "/api/expense/getHighestSpendingCategory",
+        `/api/expense?${params.toString()}`,
+      ];
 
-      const res = await api.get(`/api/expense?${params.toString()}`);
-      setExpensesThisMonth(res.data.data.expenses);
+      const results = await Promise.allSettled(
+        endpoints.map((endpoint) => api.get(endpoint))
+      );
+
+      if (results[0].status === "fulfilled") {
+        setTotalExpenses(results[0].value.data.data.totalEpxenses);
+      }
+      if (results[1].status === "fulfilled") {
+        const total = results[1].value.data.data.total;
+        setTotalSpentThisMonth(Number(total.toFixed(2)));
+      }
+      if (results[2].status === "fulfilled") {
+        const total = results[2].value.data.data.totalAverageSpending;
+        setDailySpending(Number(total.toFixed(2)));
+      }
+      if (results[3].status === "fulfilled") {
+        setHighestSpendingCategory(
+          results[3].value.data.data.highestSpendingCategory
+        );
+      }
+      if (results[4].status === "fulfilled") {
+        setExpensesThisMonth(results[4].value.data.data.expenses);
+      }
+
+      results.forEach((result, index) => {
+        if (result.status === "rejected") {
+          console.error(`Error fetching ${endpoints[index]}:`, result.reason);
+        }
+      });
     };
-    getTotalExpenses();
-    getTotalSpentThisMonth();
-    getAverageDailySpending();
-    getHighestSpendingCategory();
-    getExpensesThisMonth();
+    fetchData();
   }, []);
 
   const dailyExpenses = (() => {
@@ -214,142 +207,144 @@ export default function Overview() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row flex-wrap gap-6 mt-8">
+      <div className="flex flex-col gap-6 mt-8">
         {/* --- LINE CHART BLOCK --- */}
-        <div className="flex-1 min-w-[300px] lg:w-2/3 bg-white p-4 rounded-xl shadow text-center">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4 ml-4">
-            Monthly Spending Trend
-          </h3>
-          <div>
-            <ResponsiveContainer width="100%" aspect={2.5}>
-              <LineChart
-                data={dailyExpenses}
-                margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12, fill: "#4b5563" }}
-                  axisLine={{ stroke: "#9ca3af" }}
-                  tickLine={false}
-                />
-                <YAxis
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="lg:w-2/3 bg-white p-4 rounded-xl shadow text-center">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4 ml-4">
+              Monthly Spending Trend
+            </h3>
+            <div>
+              <ResponsiveContainer width="100%" aspect={2.5}>
+                <LineChart
+                  data={dailyExpenses}
+                  margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12, fill: "#4b5563" }}
+                    axisLine={{ stroke: "#9ca3af" }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    dataKey="amount"
+                    tick={{ fontSize: 12, fill: "#4b5563" }}
+                    axisLine={{ stroke: "#9ca3af" }}
+                    tickLine={false}
+                    domain={["auto", "auto"]}
+                    tickFormatter={(value) => `$${value}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#f9fafb",
+                      border: "1px solid #d1d5db",
+                      borderRadius: 8,
+                      padding: 10,
+                    }}
+                    labelStyle={{ fontWeight: "bold" }}
+                    formatter={(value: number) => `$${value.toFixed(2)}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    name="Spending"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    dot={{
+                      r: 5,
+                      strokeWidth: 2,
+                      fill: "#fff",
+                      stroke: "#10b981",
+                    }}
+                    activeDot={{ r: 7 }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    height={36}
+                    wrapperStyle={{ fontSize: 14, fontWeight: "bold" }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          {/* --- PIE CHART BLOCK --- */}
+          <div className="lg:w-1/3 bg-white p-4 rounded-xl shadow">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+              Spending by Category
+            </h3>
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie
+                  data={categorySpending}
                   dataKey="amount"
-                  tick={{ fontSize: 12, fill: "#4b5563" }}
-                  axisLine={{ stroke: "#9ca3af" }}
-                  tickLine={false}
-                  domain={["auto", "auto"]}
-                  tickFormatter={(value) => `$${value}`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#f9fafb",
-                    border: "1px solid #d1d5db",
-                    borderRadius: 8,
-                    padding: 10,
+                  nameKey="category"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={120}
+                  fill="#8884d8"
+                  labelLine={false}
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    percent,
+                  }) => {
+                    if (
+                      cx == null ||
+                      cy == null ||
+                      midAngle == null ||
+                      innerRadius == null ||
+                      outerRadius == null ||
+                      percent == null
+                    ) {
+                      return null;
+                    }
+                    const RADIAN = Math.PI / 180;
+                    const radius =
+                      innerRadius + (outerRadius - innerRadius) * 0.5;
+                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                    if (percent < 0.05) return null;
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="white"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fontSize={12}
+                        fontWeight="bold"
+                      >
+                        {`${(percent * 100).toFixed(0)}%`}
+                      </text>
+                    );
                   }}
-                  labelStyle={{ fontWeight: "bold" }}
+                >
+                  {categorySpending.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
                   formatter={(value: number) => `$${value.toFixed(2)}`}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="amount"
-                  name="Spending"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  dot={{
-                    r: 5,
-                    strokeWidth: 2,
-                    fill: "#fff",
-                    stroke: "#10b981",
-                  }}
-                  activeDot={{ r: 7 }}
-                />
                 <Legend
-                  verticalAlign="top"
-                  height={36}
-                  wrapperStyle={{ fontSize: 14, fontWeight: "bold" }}
+                  layout="horizontal"
+                  align="center"
+                  verticalAlign="bottom"
+                  wrapperStyle={{
+                    paddingTop: "10px",
+                    textTransform: "capitalize",
+                  }}
                 />
-              </LineChart>
+              </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
-
-        {/* --- PIE CHART BLOCK --- */}
-        <div className="flex-1 min-w-[300px] lg:w-1/3 bg-white p-4 rounded-xl shadow">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4 text-center">
-            Spending by Category
-          </h3>
-          <ResponsiveContainer width="100%" height={350}>
-            <PieChart>
-              <Pie
-                data={categorySpending}
-                dataKey="amount"
-                nameKey="category"
-                cx="50%"
-                cy="50%"
-                outerRadius={120}
-                fill="#8884d8"
-                labelLine={false}
-                label={({
-                  cx,
-                  cy,
-                  midAngle,
-                  innerRadius,
-                  outerRadius,
-                  percent,
-                }) => {
-                  if (
-                    cx == null ||
-                    cy == null ||
-                    midAngle == null ||
-                    innerRadius == null ||
-                    outerRadius == null ||
-                    percent == null
-                  ) {
-                    return null;
-                  }
-                  const RADIAN = Math.PI / 180;
-                  const radius =
-                    innerRadius + (outerRadius - innerRadius) * 0.5;
-                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                  if (percent < 0.05) return null;
-                  return (
-                    <text
-                      x={x}
-                      y={y}
-                      fill="white"
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      fontSize={12}
-                      fontWeight="bold"
-                    >
-                      {`${(percent * 100).toFixed(0)}%`}
-                    </text>
-                  );
-                }}
-              >
-                {categorySpending.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                    className="capitalize"
-                  />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value: number) => `$${value.toFixed(2)}`} />
-              <Legend
-                layout="horizontal"
-                align="center"
-                verticalAlign="bottom"
-                wrapperStyle={{
-                  paddingTop: "10px",
-                  textTransform: "capitalize",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
         </div>
 
         {/* --- BAR CHART BLOCK (New) --- */}

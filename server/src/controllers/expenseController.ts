@@ -67,14 +67,48 @@ export default class expenseController {
         }
       }
 
-      const expenses = await prisma.expense.findMany({
-        where,
-        orderBy: { date: 'desc' },
-        include: { category: true },
-      });
+      const isDateRangeQuery = req.query.from || req.query.to;
+      if (isDateRangeQuery && !req.query.page && !req.query.limit) {
+        const expenses = await prisma.expense.findMany({
+          where,
+          orderBy: { date: 'desc' },
+          include: { category: true },
+        });
+        return res.status(200).json({
+          success: true,
+          data: {
+            expenses,
+            totalExpenses: expenses.length,
+            totalPages: 1,
+          },
+        });
+      }
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const skip = (page - 1) * limit;
+
+      const [expenses, totalExpenses] = await prisma.$transaction([
+        prisma.expense.findMany({
+          where,
+          orderBy: { date: 'desc' },
+          include: { category: true },
+          skip,
+          take: limit,
+        }),
+        prisma.expense.count({ where }),
+      ]);
+
+      const totalPages = Math.ceil(totalExpenses / limit);
+
       return res.status(200).json({
         success: true,
-        data: { expenses },
+        data: {
+          expenses,
+          totalExpenses,
+          totalPages,
+        },
+        where,
       });
     } catch (error) {
       console.error(error);
@@ -182,7 +216,10 @@ export default class expenseController {
         });
       }
 
-      const expense = await prisma.expense.findUnique({ where: { id } });
+      const expense = await prisma.expense.findUnique({
+        where: { id },
+        include: { category: true },
+      });
 
       return res.status(200).json({
         success: true,
