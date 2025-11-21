@@ -38,12 +38,13 @@ if (!fs.existsSync('./uploads')) {
  * It first tries to match a name, then falls back to merchant keywords.
  * TODO: This is a bit naive. Could be replaced with a more robust rules engine or ML model.
  */
-const getCategoryId = (
+const getCategoryId = async (
+  title: string,
   merchant: string,
   categoryName: string | undefined,
   categoryMap: Map<string, string>,
   uncategorizedId: string
-): string => {
+): Promise<string> => {
   // <-- FIXED TYPE (string)
   // 1. Try to match by the provided category name
   if (categoryName) {
@@ -54,7 +55,26 @@ const getCategoryId = (
     }
   }
 
-  // 2. If no direct category match, try to guess from merchant keywords.
+  // 2. If no direct category match, get category from model.
+  try {
+    const response = await fetch('http://127.0.0.1:8000/categorize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title, merchant }),
+    });
+    const data = (await response.json()) as { category: string };
+    const category = data.category;
+    const id = categoryMap.get(category.toLowerCase());
+    if (id !== undefined) {
+      return id;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  //3. if no model category match, get category from merchant.
   const lowerMerchant = merchant.toLowerCase();
 
   if (lowerMerchant.includes('coffee') || lowerMerchant.includes('restaurant')) {
@@ -75,7 +95,7 @@ const getCategoryId = (
     return categoryMap.get('groceries') ?? uncategorizedId;
   }
 
-  // 3. Fallback to "Uncategorized"
+  // 4. Fallback to "Uncategorized"
   return uncategorizedId;
 };
 
@@ -128,6 +148,7 @@ const importCSV = [
         .pipe(parse({ columns: true, skip_empty_lines: true }));
 
       for await (const record of parser) {
+        const title = record.title;
         const amount = parseFloat(record.amount);
         const date = new Date(record.date);
         const merchant = record.merchant;
@@ -139,7 +160,13 @@ const importCSV = [
         }
 
         // 5. Run the categorizer
-        const categoryId = getCategoryId(merchant, record.category, categoryMap, uncategorizedId);
+        const categoryId = await getCategoryId(
+          title,
+          merchant,
+          record.category,
+          categoryMap,
+          uncategorizedId
+        );
 
         expensesToCreate.push({
           title: record.title || '',

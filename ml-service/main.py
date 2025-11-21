@@ -14,6 +14,10 @@ class Transaction(BaseModel):
 class TransactionList(BaseModel):
     transactions: List[Transaction]
 
+class TransacationCategoryRequirements(BaseModel):
+    title: str
+    merchant: str
+
 
 @app.get("/")
 def health_check():
@@ -73,4 +77,18 @@ def generate_insights(data: TransactionList):
             "Your highest spending day is usually Friday.",
             "You are on track to save $200 if you maintain this rate."
         ]
+    }
+
+@app.post("/categorize")
+def generate_insights(data: TransacationCategoryRequirements):
+    """
+    STUB: Categorizes each transaction.
+    Input: An expense.
+    Output: A category.
+    """
+    # TODO: Implement model or LLM calls here
+    
+    # Mock Response:
+    return {
+        "category": "errorCategory"
     }
