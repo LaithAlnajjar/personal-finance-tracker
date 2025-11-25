@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (err: any) {
       const message = err.response.data.message || "Login failed";
       setError(message);
-      return false;
+      throw err;
     } finally {
       setLoading(false);
     }
