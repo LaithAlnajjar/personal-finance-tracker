@@ -9,3 +9,5 @@ client/dist/
 server/node_modules/
 server/dist/
 ml-service/node_modules/
+ml-service/my-venv
+ml-service/__pycache__

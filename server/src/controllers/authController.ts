@@ -8,7 +8,7 @@ dotenv.config();
 
 const prisma = new PrismaClient();
 
-// Seed new users with a default set of categories for a better out-of-the-box experience.
+// Seed new users with a default set of categories.
 const DEFAULT_CATEGORIES = [
   { name: 'Dining' },
   { name: 'Groceries' },
@@ -79,7 +79,6 @@ export default class AuthController {
         return res.status(401).json({ success: false, message: 'Invalid credentials' });
       }
 
-      // Use a generic message for both wrong email and wrong password to prevent email enumeration.
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
         return res.status(401).json({ success: false, message: 'Invalid credentials' });

@@ -11,7 +11,11 @@ export default function Login() {
     email: "",
     password: "",
   });
+
   const auth = useAuth();
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -19,9 +23,18 @@ export default function Login() {
 
   const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const response = await auth?.login(input);
-    if (response) {
+    setIsLoading(true);
+
+    try {
+      if (!auth) throw new Error("Authentication service is unavailable.");
+      await auth.login(input);
       navigate("/dashboard");
+    } catch (err: any) {
+      const errorMessage =
+        err.response.data.message || "Failed to login. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -39,6 +52,11 @@ export default function Login() {
             <div className="font-medium text-xl">Welcome Back</div>
             <div className="text-gray-500">Let's track your expenses</div>
           </div>
+          {error && (
+            <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg mt-4 border border-red-200">
+              {error}
+            </div>
+          )}
           <form
             onSubmit={handleSubmit}
             className="w-100 flex flex-col pt-8 gap-8"
@@ -68,8 +86,9 @@ export default function Login() {
             <button
               className="bg-primary text-white h-11 rounded-3xl hover:bg-teal-600 hover:cursor-pointer"
               type="submit"
+              disabled={isLoading}
             >
-              Login
+              {isLoading ? "Logging in..." : "Login"}
             </button>
             <div className="text-center">
               Don't have an account?{" "}

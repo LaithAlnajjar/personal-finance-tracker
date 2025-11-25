@@ -14,14 +14,28 @@ export default function Register() {
     confirmPassword: "",
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
-    const reponse = await api.post("/api/register", input);
-    navigate("/");
+    setIsLoading(true);
+
+    try {
+      await api.post("/api/register", input);
+      navigate("/");
+    } catch (err: any) {
+      const errorMessage =
+        err.response.data.message ||
+        "Failed to create account. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,6 +52,12 @@ export default function Register() {
               Join and start tracking your expenses
             </div>
           </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-500 text-sm p-3 rounded-lg mt-4 border border-red-200">
+              {error}
+            </div>
+          )}
 
           <form
             onSubmit={handleSubmit}
@@ -100,10 +120,11 @@ export default function Register() {
             </label>
 
             <button
-              className="bg-primary text-white h-11 rounded-3xl hover:bg-teal-600 hover:cursor-pointer disabled:opacity-60"
+              className="bg-primary text-white h-11 rounded-3xl hover:bg-teal-600 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all flex justify-center items-center"
               type="submit"
+              disabled={isLoading}
             >
-              Create account
+              {isLoading ? "Creating account..." : "Log"}
             </button>
 
             <div className="text-center">

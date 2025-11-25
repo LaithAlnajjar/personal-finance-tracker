@@ -43,7 +43,6 @@ const WEEKLY_EXPENSES = [
   { merchants: ['Steam Games', 'PlayStation Store'], category: 'Entertainment', range: [10, 50] },
 ];
 
-// Helper: Get random float
 function getRandomAmount(min: number, max: number): number {
   return parseFloat((Math.random() * (max - min) + min).toFixed(2));
 }
@@ -51,9 +50,8 @@ function getRandomAmount(min: number, max: number): number {
 async function main() {
   console.log('🌱 Starting Realistic Jordanian Seeding...');
 
-  // --- USER CREATION (Same as before) ---
-  const DEMO_EMAIL = 'demo@verutti.co';
-  const DEMO_PASSWORD = 'password123';
+  const DEMO_EMAIL = 'test@test.com';
+  const DEMO_PASSWORD = 'test';
   const hashedPassword = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
 
   const user = await prisma.user.upsert({
@@ -61,14 +59,12 @@ async function main() {
     update: {},
     create: {
       email: DEMO_EMAIL,
-      name: 'Jordanian User',
+      name: 'test',
       password: hashedPassword,
     },
   });
   console.log(`👤 User ready: ${user.email}`);
 
-  // --- CATEGORY SETUP ---
-  // Create a map to store Category IDs
   const allCategoryNames = [
     'Housing',
     'Utilities',
@@ -85,16 +81,12 @@ async function main() {
     const cat = await prisma.category
       .upsert({
         where: {
-          // Assuming you have a composite unique key or just creating blindly
-          // If your schema doesn't support unique names per user, use create.
-          // For simplicity in this seed, we'll just create or find first.
-          id: 'temp-id', // This is a hack for upsert, better to use findFirst then create
+          id: 'temp-id',
         },
         update: {},
-        create: { name, userId: user.id }, // Ensure userId is attached if your schema requires it
+        create: { name, userId: user.id },
       })
       .catch(async () => {
-        // If upsert fails (e.g. id check), just find or create
         const existing = await prisma.category.findFirst({ where: { name, userId: user.id } });
         if (existing) return existing;
         return prisma.category.create({ data: { name, userId: user.id } });
@@ -102,7 +94,6 @@ async function main() {
     categoryMap[name] = cat.id;
   }
 
-  // --- GENERATION LOGIC: DAY BY DAY ---
   const expenses = [];
   const today = new Date();
   const DAYS_TO_SIMULATE = 365;
@@ -110,10 +101,9 @@ async function main() {
   for (let i = 0; i < DAYS_TO_SIMULATE; i++) {
     const currentDate = new Date();
     currentDate.setDate(today.getDate() - i);
-    const isWeekend = currentDate.getDay() === 5 || currentDate.getDay() === 6; // Fri/Sat in Jordan
+    const isWeekend = currentDate.getDay() === 5 || currentDate.getDay() === 6;
     const dayOfMonth = currentDate.getDate();
 
-    // 1. ADD FIXED BILLS (On the 1st of the month)
     if (dayOfMonth === 1) {
       for (const bill of FIXED_EXPENSES) {
         expenses.push({
@@ -126,11 +116,7 @@ async function main() {
         });
       }
     }
-
-    // 2. ADD DAILY EXPENSES (High probability)
-    // A student/employee buys food/coffee/transport 80% of days
     if (Math.random() > 0.2) {
-      // Pick 1 to 3 items per day
       const itemsToday = Math.floor(Math.random() * 3) + 1;
       for (let j = 0; j < itemsToday; j++) {
         const pattern = DAILY_EXPENSES[Math.floor(Math.random() * DAILY_EXPENSES.length)];
@@ -146,8 +132,6 @@ async function main() {
       }
     }
 
-    // 3. ADD WEEKLY EXPENSES (Lower probability)
-    // More likely on weekends, less likely on weekdays
     const probability = isWeekend ? 0.6 : 0.1;
     if (Math.random() < probability) {
       const pattern = WEEKLY_EXPENSES[Math.floor(Math.random() * WEEKLY_EXPENSES.length)];
@@ -163,7 +147,6 @@ async function main() {
     }
   }
 
-  // Batch insert
   console.log(`📝 Inserting ${expenses.length} realistic expenses...`);
   await prisma.expense.createMany({ data: expenses });
   console.log('✅ Done!');
