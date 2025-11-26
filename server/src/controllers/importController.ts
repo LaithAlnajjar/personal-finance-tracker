@@ -36,7 +36,6 @@ if (!fs.existsSync('./uploads')) {
 /**
  * A simple rule-based categorizer.
  * It first tries to match a name, then falls back to merchant keywords.
- * TODO: This is a bit naive. Could be replaced with a more robust rules engine or ML model.
  */
 const getCategoryId = async (
   title: string,

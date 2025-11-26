@@ -1,4 +1,6 @@
 import { Link } from "react-router";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router";
 import {
   Plus,
   Upload,
@@ -13,7 +15,17 @@ import {
 import logo from "../assets/expensia-high-resolution-logo-transparent.png";
 
 export default function Sidebar() {
+  const auth = useAuth();
+  const navigate = useNavigate();
+
   const handleLogout = () => {
+    try {
+      if (!auth) throw new Error("Authentication service is unavailable.");
+      auth.logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out", error);
+    }
     console.log("User logged out");
   };
 
@@ -115,7 +127,7 @@ export default function Sidebar() {
       <div className="pb-10">
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-2 rounded-lg p-2 text-red-500 hover:bg-red-50"
+          className="flex w-full items-center gap-2 rounded-lg p-2 text-red-500 hover:bg-red-50 hover:cursor-pointer"
         >
           <LogOut size={20} />
           Log Out

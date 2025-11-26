@@ -111,7 +111,7 @@ export default function NewExpense() {
           {" "}
           Category
           <select
-            className="text-base p-4 h-12 w-full lg border border-gray-300 rounded-3xl focus:border-primary bg-white"
+            className="text-base p-4 w-full lg border border-gray-300 rounded-3xl focus:border-primary bg-white"
             name="categoryId"
             value={input.categoryId}
             onChange={handleChange}
@@ -140,20 +140,7 @@ export default function NewExpense() {
             onChange={handleChange}
           />
         </label>
-        <label
-          className="flex flex-col text-gray-500 font-medium text-lg gap-1"
-          htmlFor="notes"
-        >
-          {" "}
-          Notes
-          <input
-            className="text-base p-4 h-10 w-full lg border border-gray-300 rounded-3xl focus:border-primary"
-            type="text"
-            name="notes"
-            value={input.notes}
-            onChange={handleChange}
-          />
-        </label>
+
         <button
           className="bg-primary text-white font-medium h-11 rounded-3xl hover:bg-teal-600 hover:cursor-pointer"
           type="submit"

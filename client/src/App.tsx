@@ -7,6 +7,9 @@ import NewExpense from "./pages/NewExpense";
 import ImportCSV from "./pages/ImportCSV";
 import Overview from "./pages/Overview";
 import Categories from "./pages/Categories";
+import Anomalies from "./pages/Anomalies";
+import Model from "./pages/Model";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -20,6 +23,9 @@ function App() {
           <Route path="new" element={<NewExpense />} />
           <Route path="import" element={<ImportCSV />} />
           <Route path="settings/categories" element={<Categories />} />
+          <Route path="anomalies" element={<Anomalies />} />
+          <Route path="settings/model" element={<Model />} />
+          <Route path="settings/profile" element={<Profile />} />
         </Route>
       </Routes>
     </Router>
