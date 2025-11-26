@@ -1,7 +1,3 @@
-Here is the `README.md` tailored to your project structure and tech stack, following the exact format you requested.
-
----
-
 # Personal Finance & ML Tracker
 
 This is a full-stack financial management platform designed to track expenses, visualize spending habits, and leverage machine learning for auto-categorization and future spending predictions.
